@@ -70,6 +70,15 @@ describe('scoreForGuess', () => {
 })
 
 describe('buildDeck', () => {
+  test('embaralha: seeds diferentes produzem ordens diferentes', () => {
+    const bigPool: AnswerCard[] = Array.from({ length: 30 }, (_, i) =>
+      card(`s${i}`, 'esportes'),
+    )
+    const a = buildDeck(bigPool, 'esportes', 'facil', seededRng(1))
+    const b = buildDeck(bigPool, 'esportes', 'facil', seededRng(2))
+    expect(a.map((c) => c.id)).not.toEqual(b.map((c) => c.id))
+  })
+
   test('filtra por tema', () => {
     const deck = buildDeck(POOL, 'esportes', 'facil', seededRng())
     expect(deck.map((c) => c.id).sort()).toEqual(['e1', 'e2'])

@@ -52,11 +52,17 @@ describe('banco de cartas', () => {
 })
 
 describe('cartas de relacionamento', () => {
-  test('cada profundidade tem pelo menos 15 perguntas', () => {
+  test('total de 330 perguntas: 110 por profundidade', () => {
+    expect(RELATIONSHIP_CARDS).toHaveLength(330)
     for (const depth of ['leve', 'medio', 'profundo'] as const) {
       const count = RELATIONSHIP_CARDS.filter((c) => c.depth === depth).length
-      expect(count, `profundidade ${depth}`).toBeGreaterThanOrEqual(15)
+      expect(count, `profundidade ${depth}`).toBe(110)
     }
+  })
+
+  test('perguntas não se repetem', () => {
+    const prompts = RELATIONSHIP_CARDS.map((c) => c.prompt.toLowerCase().trim())
+    expect(new Set(prompts).size).toBe(prompts.length)
   })
 
   test('IDs únicos e perguntas não vazias', () => {

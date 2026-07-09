@@ -27,6 +27,7 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
   const [peek, setPeek] = useState(false)
   const hintsEndRef = useRef<HTMLLIElement>(null)
 
+  const solo = match.teams.length === 1
   const round = match.current
   const roundActive = round?.resolved === 'pending'
   const showResult = round != null && round.resolved !== 'pending' && !betweenRounds
@@ -169,7 +170,7 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
             </button>
             <div>
               <p className="mb-2 text-center text-xs font-bold uppercase tracking-wide text-ink-soft">
-                Alguém acertou? Toque no time
+                {solo ? 'E aí, sabe a resposta?' : 'Alguém acertou? Toque no time'}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {match.teams.map((team) => (
@@ -178,7 +179,7 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
                     onClick={() => onChange(correctGuess(match, team.id))}
                     className="btn bg-felt-700 px-4 py-2.5 text-sm text-white shadow-[0_3px_0_#0d231c]"
                   >
-                    ✅ {team.name}
+                    ✅ {solo ? 'Acertei!' : team.name}
                   </button>
                 ))}
               </div>
@@ -198,7 +199,7 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
                 onClick={() => onChange(giveUp(match))}
                 className="btn flex-1 border border-ink/15 bg-black/5 text-sm text-ink-soft"
               >
-                🏳️ Ninguém acertou
+                {solo ? '🏳️ Não sei, revela!' : '🏳️ Ninguém acertou'}
               </button>
             </div>
           </div>

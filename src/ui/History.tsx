@@ -34,6 +34,12 @@ export function History({ onBack }: HistoryProps) {
         <h1 className="font-display text-4xl text-amber-300">Histórico</h1>
       </header>
 
+      <p className="-mt-3 text-xs text-card/60">
+        🔒 Suas partidas ficam salvas apenas neste dispositivo e navegador —
+        nada é enviado para nenhum servidor. Conversas do modo casal nunca são
+        gravadas.
+      </p>
+
       {records.length === 0 ? (
         <div className="playing-card animate-deal flex flex-col items-center gap-3 px-6 py-12 text-center">
           <span className="text-5xl">🗒️</span>

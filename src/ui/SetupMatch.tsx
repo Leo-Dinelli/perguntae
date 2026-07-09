@@ -10,6 +10,7 @@ export interface MatchSetup {
 }
 
 interface SetupMatchProps {
+  mode: 'grupo' | 'solo'
   onStart: (setup: MatchSetup) => void
   onBack: () => void
 }
@@ -19,8 +20,11 @@ type ThemePick = ThemeChoice | 'roleta'
 const ROUND_OPTIONS = [5, 10, 15]
 const MAX_TEAMS = 6
 
-export function SetupMatch({ onStart, onBack }: SetupMatchProps) {
-  const [teamNames, setTeamNames] = useState<string[]>(['Time Azul', 'Time Vermelho'])
+export function SetupMatch({ mode, onStart, onBack }: SetupMatchProps) {
+  const solo = mode === 'solo'
+  const [teamNames, setTeamNames] = useState<string[]>(
+    solo ? ['Você'] : ['Time Azul', 'Time Vermelho'],
+  )
   const [themePick, setThemePick] = useState<ThemePick>('geral')
   const [difficulty, setDifficulty] = useState<Difficulty>('facil')
   const [totalRounds, setTotalRounds] = useState(10)
@@ -38,7 +42,9 @@ export function SetupMatch({ onStart, onBack }: SetupMatchProps) {
   }
 
   function start() {
-    const cleaned = teamNames.map((n, i) => n.trim() || `Time ${i + 1}`)
+    const cleaned = teamNames.map(
+      (n, i) => n.trim() || (solo ? 'Você' : `Time ${i + 1}`),
+    )
     onStart({
       teamNames: cleaned,
       config: {
@@ -63,12 +69,14 @@ export function SetupMatch({ onStart, onBack }: SetupMatchProps) {
         <button onClick={onBack} className="btn-ghost px-4 py-2 text-sm" aria-label="Voltar">
           ←
         </button>
-        <h1 className="font-display text-4xl text-amber-300">Montar partida</h1>
+        <h1 className="font-display text-4xl text-amber-300">
+          {solo ? 'Jogar sozinho' : 'Montar partida'}
+        </h1>
       </header>
 
       <section aria-labelledby="times">
         <h2 id="times" className="mb-3 font-display text-2xl text-card">
-          Times
+          {solo ? 'Seu nome' : 'Times'}
         </h2>
         <div className="flex flex-col gap-2">
           {teamNames.map((name, i) => (
@@ -92,7 +100,7 @@ export function SetupMatch({ onStart, onBack }: SetupMatchProps) {
             </div>
           ))}
         </div>
-        {teamNames.length < MAX_TEAMS && (
+        {!solo && teamNames.length < MAX_TEAMS && (
           <button onClick={addTeam} className="btn-ghost mt-2 w-full text-sm">
             + Adicionar time
           </button>

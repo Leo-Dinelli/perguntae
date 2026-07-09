@@ -12,7 +12,7 @@ export interface MatchRecord {
   winners: string[]
 }
 
-const KEY = 'vinte-dicas:history:v1'
+const KEY = 'perguntae:history:v1'
 const MAX_RECORDS = 50
 
 function isRecord(value: unknown): value is MatchRecord {

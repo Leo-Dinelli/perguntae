@@ -13,19 +13,26 @@ export function End({ match, onRematch, onNewSetup, onHome }: EndProps) {
   const champs = winners(match)
   const ranking = [...match.teams].sort((a, b) => b.score - a.score)
   const tie = champs.length > 1
+  const solo = match.teams.length === 1
 
   return (
     <div className="relative flex flex-col items-center gap-8 pt-10 pb-16">
       <Confetti count={36} />
       <header className="animate-title-pop text-center">
-        <span className="text-6xl">{tie ? '🤝' : '🏆'}</span>
+        <span className="text-6xl">{solo ? '🎯' : tie ? '🤝' : '🏆'}</span>
         <h1 className="mt-3 font-display text-5xl text-amber-300">
-          {tie ? 'Empate!' : `${champs[0].name} venceu!`}
+          {solo
+            ? `${match.teams[0].score} pontos!`
+            : tie
+              ? 'Empate!'
+              : `${champs[0].name} venceu!`}
         </h1>
         <p className="mt-2 text-card/75">
-          {tie
-            ? `${champs.map((t) => t.name).join(' e ')} terminaram lado a lado.`
-            : 'Menos dicas, mais glória.'}
+          {solo
+            ? 'Anote esse recorde — a próxima rodada é contra você mesmo.'
+            : tie
+              ? `${champs.map((t) => t.name).join(' e ')} terminaram lado a lado.`
+              : 'Menos dicas, mais glória.'}
         </p>
       </header>
 
@@ -45,10 +52,10 @@ export function End({ match, onRematch, onNewSetup, onHome }: EndProps) {
 
       <div className="flex w-full max-w-md flex-col gap-3">
         <button onClick={onRematch} className="btn-primary text-lg">
-          🔁 Revanche (mesmos times)
+          {solo ? '🔁 Jogar de novo' : '🔁 Revanche (mesmos times)'}
         </button>
         <button onClick={onNewSetup} className="btn-ghost">
-          ⚙️ Mudar times ou tema
+          {solo ? '⚙️ Mudar tema ou dificuldade' : '⚙️ Mudar times ou tema'}
         </button>
         <button onClick={onHome} className="btn-ghost">
           🏠 Voltar ao início

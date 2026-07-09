@@ -3,6 +3,7 @@ import { THEMES } from '../game/types'
 
 interface HomeProps {
   onGroupMode: () => void
+  onSoloMode: () => void
   onCoupleMode: () => void
   onHistory: () => void
 }
@@ -34,7 +35,7 @@ function FloatingBackground() {
   )
 }
 
-export function Home({ onGroupMode, onCoupleMode, onHistory }: HomeProps) {
+export function Home({ onGroupMode, onSoloMode, onCoupleMode, onHistory }: HomeProps) {
   return (
     <div className="relative flex flex-col items-center gap-8 pt-10 pb-16">
       <FloatingBackground />
@@ -44,7 +45,7 @@ export function Home({ onGroupMode, onCoupleMode, onHistory }: HomeProps) {
           Uma resposta · vinte pistas
         </p>
         <h1 className="font-display text-7xl text-amber-300 drop-shadow-[0_4px_0_rgba(0,0,0,0.35)] sm:text-8xl">
-          20 Dicas
+          PerguntAê
         </h1>
         <p className="mt-3 max-w-md text-balance text-card/80">
           O jogo de adivinhação para jogar em grupo: quanto menos dicas você
@@ -53,6 +54,22 @@ export function Home({ onGroupMode, onCoupleMode, onHistory }: HomeProps) {
       </header>
 
       <div className="grid w-full max-w-lg gap-4 sm:grid-cols-2">
+        <button
+          onClick={onSoloMode}
+          className="playing-card animate-rise flex cursor-pointer flex-col items-start gap-3 p-6 text-left transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-amber-300 sm:col-span-2 sm:flex-row sm:items-center"
+          style={{ animationDelay: '100ms' }}
+        >
+          <span className="text-2xl">🎯</span>
+          <span className="flex-1">
+            <span className="block font-display text-3xl">Jogar sozinho</span>
+            <span className="text-sm text-ink-soft">
+              Treine seu repertório: acerte com o mínimo de dicas e bata seu
+              recorde.
+            </span>
+          </span>
+          <span className="btn-primary w-full sm:w-auto">Jogar agora</span>
+        </button>
+
         <button
           onClick={onGroupMode}
           className="playing-card animate-rise group flex cursor-pointer flex-col items-start gap-3 p-6 text-left transition hover:-translate-y-1 hover:rotate-[-0.5deg] focus-visible:outline-4 focus-visible:outline-amber-300"

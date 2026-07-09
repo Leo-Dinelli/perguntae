@@ -11,6 +11,16 @@ import { objetos } from './objetos'
 import { pessoas } from './pessoas'
 import { relacionamento } from './relacionamento'
 
+/**
+ * Packs gerados por scripts/generate-cards.mjs (JSON em ./packs/).
+ * A qualidade é garantida pelos testes do banco, que cobrem tudo.
+ */
+const packModules = import.meta.glob('./packs/*.json', {
+  eager: true,
+  import: 'default',
+})
+const PACK_CARDS = Object.values(packModules).flat() as AnswerCard[]
+
 export const ALL_CARDS: AnswerCard[] = [
   ...esportes,
   ...comida,
@@ -22,6 +32,7 @@ export const ALL_CARDS: AnswerCard[] = [
   ...animais,
   ...marcas,
   ...games,
+  ...PACK_CARDS,
 ]
 
 export const RELATIONSHIP_CARDS: RelationshipCard[] = relacionamento

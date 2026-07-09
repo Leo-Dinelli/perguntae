@@ -23,6 +23,7 @@ function newMatchId(): string {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
+  const [setupMode, setSetupMode] = useState<'grupo' | 'solo'>('grupo')
   const [match, setMatch] = useState<MatchState | null>(null)
   const [setup, setSetup] = useState<MatchSetup | null>(null)
   const matchIdRef = useRef('')
@@ -52,14 +53,25 @@ export default function App() {
     <main className="mx-auto w-full max-w-xl px-4 pt-6">
       {screen === 'home' && (
         <Home
-          onGroupMode={() => setScreen('setup')}
+          onGroupMode={() => {
+            setSetupMode('grupo')
+            setScreen('setup')
+          }}
+          onSoloMode={() => {
+            setSetupMode('solo')
+            setScreen('setup')
+          }}
           onCoupleMode={() => setScreen('couple')}
           onHistory={() => setScreen('history')}
         />
       )}
 
       {screen === 'setup' && (
-        <SetupMatch onStart={startMatch} onBack={() => setScreen('home')} />
+        <SetupMatch
+          mode={setupMode}
+          onStart={startMatch}
+          onBack={() => setScreen('home')}
+        />
       )}
 
       {screen === 'play' && match && setup && (
