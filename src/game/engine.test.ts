@@ -7,8 +7,10 @@ import {
   drawCard,
   giveUp,
   revealHint,
+  roundValue,
   scoreForGuess,
   skipCard,
+  buyGeniusHint,
   winners,
 } from './engine'
 import type { AnswerCard, Difficulty, MatchConfig, ThemeId } from './types'
@@ -283,6 +285,39 @@ describe('fim de partida', () => {
       teams: state.teams.map((t) => ({ ...t, score: 10 })),
     }
     expect(winners(empatados).map((t) => t.name)).toEqual(['A', 'B'])
+  })
+})
+
+describe('dica genial', () => {
+  test('custa 5 pontos do valor da carta', () => {
+    let state = drawCard(createMatch(['A', 'B'], POOL, CONFIG, seededRng()))
+    expect(roundValue(state.current!)).toBe(20)
+    state = buyGeniusHint(state)
+    expect(state.current!.geniusUsed).toBe(true)
+    expect(roundValue(state.current!)).toBe(15)
+    state = correctGuess(state, state.teams[0].id)
+    expect(state.teams[0].score).toBe(15)
+    expect(state.current!.pointsAwarded).toBe(15)
+  })
+
+  test('o valor da carta nunca cai abaixo de 1', () => {
+    let state = drawCard(createMatch(['A', 'B'], POOL, CONFIG, seededRng()))
+    for (let i = 0; i < 17; i++) state = revealHint(state) // 18 dicas → vale 3
+    state = buyGeniusHint(state)
+    expect(roundValue(state.current!)).toBe(1)
+  })
+
+  test('usar duas vezes não cobra duas vezes', () => {
+    let state = drawCard(createMatch(['A', 'B'], POOL, CONFIG, seededRng()))
+    state = buyGeniusHint(state)
+    state = buyGeniusHint(state)
+    expect(roundValue(state.current!)).toBe(15)
+  })
+
+  test('não faz nada com rodada resolvida', () => {
+    let state = drawCard(createMatch(['A', 'B'], POOL, CONFIG, seededRng()))
+    state = giveUp(state)
+    expect(buyGeniusHint(state)).toBe(state)
   })
 })
 

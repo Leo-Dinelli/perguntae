@@ -3,14 +3,18 @@ import {
   availableThemes,
   correctGuess,
   drawCard,
+  GENIUS_HINT_COST,
   giveUp,
   revealHint,
-  scoreForGuess,
+  roundValue,
   skipCard,
+  buyGeniusHint,
 } from '../game/engine'
-import { Confetti } from './Confetti'
+import { evaluateGuess, type GuessLevel } from '../game/guess'
 import type { MatchState, ThemeId } from '../game/types'
+import { sfx } from '../sound'
 import { DIFFICULTY_META, THEME_META } from '../theme'
+import { Confetti } from './Confetti'
 import { ScoreBar } from './ScoreBar'
 import { Wheel } from './Wheel'
 
@@ -22,9 +26,18 @@ interface PlayProps {
   onQuit: () => void
 }
 
+const FEEDBACK: Record<Exclude<GuessLevel, 'acertou'>, string> = {
+  longe: '❄️ Longe… tenta outra!',
+  chegando: '🌡️ Chegando lá…',
+  perto: '🔥 Perto da resposta!',
+}
+
 export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps) {
   const [betweenRounds, setBetweenRounds] = useState(true)
   const [peek, setPeek] = useState(false)
+  const [guess, setGuess] = useState('')
+  const [feedback, setFeedback] = useState<Exclude<GuessLevel, 'acertou'> | null>(null)
+  const [attempts, setAttempts] = useState(0)
   const hintsEndRef = useRef<HTMLLIElement>(null)
 
   const solo = match.teams.length === 1
@@ -38,8 +51,26 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
 
   function draw(theme?: ThemeId) {
     setPeek(false)
+    setGuess('')
+    setFeedback(null)
+    setAttempts(0)
     setBetweenRounds(false)
+    sfx.draw()
     onChange(drawCard(match, theme))
+  }
+
+  function submitGuess() {
+    if (!round || !guess.trim()) return
+    const level = evaluateGuess(guess, round.card.answer)
+    if (level === 'acertou') {
+      sfx.correct()
+      onChange(correctGuess(match, match.teams[0].id))
+      return
+    }
+    setFeedback(level)
+    setAttempts((n) => n + 1)
+    if (level === 'longe') sfx.cold()
+    else sfx.warm()
   }
 
   function advance() {
@@ -51,6 +82,8 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
   }
 
   const cardNumber = roundActive ? match.roundsPlayed + 1 : match.roundsPlayed
+  // com a dica genial ativa, a dica 20 já está visível no destaque
+  const maxReveal = round?.geniusUsed ? 19 : 20
 
   return (
     <div className="flex flex-col gap-5 pb-16">
@@ -111,14 +144,16 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
                 {THEME_META[round.card.theme].direction}
               </p>
             </div>
-            <button
-              onClick={() => setPeek((p) => !p)}
-              className="shrink-0 cursor-pointer rounded-xl bg-black/25 px-3 py-2 text-xs font-bold focus-visible:outline-2 focus-visible:outline-white"
-              aria-pressed={peek}
-              title="Só para o narrador da rodada!"
-            >
-              {peek ? `🙈 ${round.card.answer}` : '👁 Espiar resposta'}
-            </button>
+            {!solo && (
+              <button
+                onClick={() => setPeek((p) => !p)}
+                className="shrink-0 cursor-pointer rounded-xl bg-black/25 px-3 py-2 text-xs font-bold focus-visible:outline-2 focus-visible:outline-white"
+                aria-pressed={peek}
+                title="Só para o narrador da rodada!"
+              >
+                {peek ? `🙈 ${round.card.answer}` : '👁 Espiar resposta'}
+              </button>
+            )}
           </div>
 
           <div className="flex items-center justify-between gap-4 border-b border-card-edge px-5 py-3">
@@ -130,11 +165,11 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
                 valendo
               </span>
               <span
-                key={round.revealed}
+                key={`${round.revealed}-${round.geniusUsed}`}
                 className="animate-stamp inline-flex h-11 w-11 items-center justify-center rounded-full font-display text-2xl text-white shadow"
                 style={{ background: THEME_META[round.card.theme].color }}
               >
-                {scoreForGuess(round.revealed)}
+                {roundValue(round)}
               </span>
               <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
                 pts
@@ -160,34 +195,109 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
             ))}
           </ol>
 
-          <div className="flex flex-col gap-3 border-t border-card-edge bg-black/[0.03] px-5 py-4">
-            <button
-              onClick={() => onChange(revealHint(match))}
-              disabled={round.revealed >= round.card.hints.length}
-              className="btn-primary"
+          {round.geniusUsed && (
+            <div
+              className="animate-hint mx-5 mb-3 rounded-2xl border-2 bg-amber-50 px-4 py-3"
+              style={{ borderColor: THEME_META[round.card.theme].color }}
             >
-              💡 Revelar próxima dica
-            </button>
-            <div>
-              <p className="mb-2 text-center text-xs font-bold uppercase tracking-wide text-ink-soft">
-                {solo ? 'E aí, sabe a resposta?' : 'Alguém acertou? Toque no time'}
+              <p
+                className="mb-1 text-xs font-bold uppercase tracking-wide"
+                style={{ color: THEME_META[round.card.theme].color }}
+              >
+                🧠 Dica genial (valeu −{GENIUS_HINT_COST} pts)
               </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {match.teams.map((team) => (
-                  <button
-                    key={team.id}
-                    onClick={() => onChange(correctGuess(match, team.id))}
-                    className="btn bg-felt-700 px-4 py-2.5 text-sm text-white shadow-[0_3px_0_#0d231c]"
-                  >
-                    ✅ {solo ? 'Acertei!' : team.name}
-                  </button>
-                ))}
-              </div>
+              <p className="font-bold">{round.card.hints[19]}</p>
             </div>
+          )}
+
+          <div className="flex flex-col gap-3 border-t border-card-edge bg-black/[0.03] px-5 py-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  sfx.reveal()
+                  onChange(revealHint(match))
+                }}
+                disabled={round.revealed >= maxReveal}
+                className="btn-primary flex-1"
+              >
+                💡 Revelar próxima dica
+              </button>
+              <button
+                onClick={() => {
+                  sfx.genius()
+                  onChange(buyGeniusHint(match))
+                }}
+                disabled={round.geniusUsed || round.revealed >= 20}
+                className="btn border-2 border-amber-400 bg-amber-100 text-sm text-ink"
+                title={`Mostra a dica mais reveladora da carta em troca de ${GENIUS_HINT_COST} pontos`}
+              >
+                🧠 Dica genial (−{GENIUS_HINT_COST})
+              </button>
+            </div>
+
+            {solo ? (
+              <div>
+                <p className="mb-2 text-center text-xs font-bold uppercase tracking-wide text-ink-soft">
+                  E aí, sabe a resposta?
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    value={guess}
+                    onChange={(e) => setGuess(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') submitGuess()
+                    }}
+                    placeholder="Digite sua resposta…"
+                    aria-label="Sua resposta"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    className="w-full rounded-2xl border-2 border-ink/15 bg-white px-4 py-3 font-bold text-ink outline-none transition focus:border-amber-400"
+                  />
+                  <button
+                    onClick={submitGuess}
+                    disabled={!guess.trim()}
+                    className="btn bg-felt-700 px-5 text-sm text-white shadow-[0_3px_0_#0d231c]"
+                  >
+                    Responder
+                  </button>
+                </div>
+                {feedback && (
+                  <p
+                    key={attempts}
+                    className="animate-stamp mt-2 text-center font-bold text-ink-soft"
+                    aria-live="polite"
+                  >
+                    {FEEDBACK[feedback]}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <p className="mb-2 text-center text-xs font-bold uppercase tracking-wide text-ink-soft">
+                  Alguém acertou? Toque no time
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {match.teams.map((team) => (
+                    <button
+                      key={team.id}
+                      onClick={() => {
+                        sfx.correct()
+                        onChange(correctGuess(match, team.id))
+                      }}
+                      className="btn bg-felt-700 px-4 py-2.5 text-sm text-white shadow-[0_3px_0_#0d231c]"
+                    >
+                      ✅ {team.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button
                 onClick={() => {
                   setPeek(false)
+                  sfx.skip()
                   onChange(skipCard(match))
                 }}
                 className="btn flex-1 border border-ink/15 bg-black/5 text-sm text-ink-soft"
@@ -196,7 +306,10 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
                 ⏭️ Pular carta
               </button>
               <button
-                onClick={() => onChange(giveUp(match))}
+                onClick={() => {
+                  sfx.wrong()
+                  onChange(giveUp(match))
+                }}
                 className="btn flex-1 border border-ink/15 bg-black/5 text-sm text-ink-soft"
               >
                 {solo ? '🏳️ Não sei, revela!' : '🏳️ Ninguém acertou'}
@@ -214,15 +327,16 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
             <>
               <span className="animate-stamp text-5xl">🎉</span>
               <p className="text-sm font-bold uppercase tracking-wide text-ink-soft">
-                {match.teams.find((t) => t.id === round.winnerTeamId)?.name} acertou
-                com {round.revealed} {round.revealed === 1 ? 'dica' : 'dicas'}!
+                {solo
+                  ? `Você acertou com ${round.revealed} ${round.revealed === 1 ? 'dica' : 'dicas'}!`
+                  : `${match.teams.find((t) => t.id === round.winnerTeamId)?.name} acertou com ${round.revealed} ${round.revealed === 1 ? 'dica' : 'dicas'}!`}
               </p>
             </>
           ) : (
             <>
               <span className="animate-stamp text-5xl">😅</span>
               <p className="text-sm font-bold uppercase tracking-wide text-ink-soft">
-                Ninguém acertou! A resposta era…
+                {solo ? 'A resposta era…' : 'Ninguém acertou! A resposta era…'}
               </p>
             </>
           )}

@@ -3,6 +3,7 @@ import type {
   Difficulty,
   MatchConfig,
   MatchState,
+  RoundState,
   Team,
   ThemeChoice,
   ThemeId,
@@ -122,8 +123,26 @@ export function drawCard(state: MatchState, theme?: ThemeId): MatchState {
   return {
     ...state,
     deck,
-    current: { card, revealed: 1, resolved: 'pending' },
+    current: { card, revealed: 1, geniusUsed: false, resolved: 'pending' },
   }
+}
+
+export const GENIUS_HINT_COST = 5
+
+/**
+ * A dica genial mostra a dica mais reveladora da carta antes da hora,
+ * em troca de 5 pontos do valor da rodada.
+ */
+export function buyGeniusHint(state: MatchState): MatchState {
+  const round = state.current
+  if (!round || round.resolved !== 'pending' || round.geniusUsed) return state
+  return { ...state, current: { ...round, geniusUsed: true } }
+}
+
+/** Quanto a carta vale agora: dicas reveladas + custo da dica genial. */
+export function roundValue(round: RoundState): number {
+  const penalty = round.geniusUsed ? GENIUS_HINT_COST : 0
+  return Math.max(1, scoreForGuess(round.revealed) - penalty)
 }
 
 export function revealHint(state: MatchState): MatchState {
@@ -149,7 +168,7 @@ function finishRound(state: MatchState): Pick<MatchState, 'roundsPlayed' | 'fini
 export function correctGuess(state: MatchState, teamId: string): MatchState {
   const round = state.current
   if (!round || round.resolved !== 'pending') return state
-  const points = scoreForGuess(round.revealed)
+  const points = roundValue(round)
   return {
     ...state,
     teams: state.teams.map((t) =>

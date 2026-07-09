@@ -3,6 +3,7 @@ import { ALL_CARDS } from './data/cards'
 import { createMatch, winners } from './game/engine'
 import type { MatchState } from './game/types'
 import { saveMatch } from './history'
+import { isMuted, sfx, toggleMuted } from './sound'
 import { Couple } from './ui/Couple'
 import { End } from './ui/End'
 import { History } from './ui/History'
@@ -26,7 +27,17 @@ export default function App() {
   const [setupMode, setSetupMode] = useState<'grupo' | 'solo'>('grupo')
   const [match, setMatch] = useState<MatchState | null>(null)
   const [setup, setSetup] = useState<MatchSetup | null>(null)
+  const [muted, setMuted] = useState(isMuted)
   const matchIdRef = useRef('')
+
+  // blip discreto em todo botão; sons específicos são disparados por cima
+  useEffect(() => {
+    function onClick(event: MouseEvent) {
+      if ((event.target as HTMLElement).closest('button')) sfx.click()
+    }
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [])
 
   function startMatch(nextSetup: MatchSetup) {
     matchIdRef.current = newMatchId()
@@ -51,6 +62,14 @@ export default function App() {
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 pt-6">
+      <button
+        onClick={() => setMuted(toggleMuted())}
+        aria-label={muted ? 'Ativar sons' : 'Silenciar sons'}
+        title={muted ? 'Ativar sons' : 'Silenciar sons'}
+        className="fixed bottom-4 right-4 z-50 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-felt-800/90 text-lg shadow-lg transition active:scale-90"
+      >
+        {muted ? '🔇' : '🔊'}
+      </button>
       {screen === 'home' && (
         <Home
           onGroupMode={() => {

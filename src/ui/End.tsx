@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react'
 import { winners } from '../game/engine'
 import type { MatchState } from '../game/types'
+import { sfx } from '../sound'
 import { Confetti } from './Confetti'
 
 interface EndProps {
@@ -14,6 +16,13 @@ export function End({ match, onRematch, onNewSetup, onHome }: EndProps) {
   const ranking = [...match.teams].sort((a, b) => b.score - a.score)
   const tie = champs.length > 1
   const solo = match.teams.length === 1
+
+  const playedFanfare = useRef(false)
+  useEffect(() => {
+    if (playedFanfare.current) return
+    playedFanfare.current = true
+    sfx.victory()
+  }, [])
 
   return (
     <div className="relative flex flex-col items-center gap-8 pt-10 pb-16">

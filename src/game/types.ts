@@ -54,6 +54,8 @@ export interface RoundState {
   card: AnswerCard
   /** Quantas dicas já foram reveladas (mínimo 1 após sacar a carta) */
   revealed: number
+  /** Dica genial usada nesta carta (custa 5 pontos do valor) */
+  geniusUsed: boolean
   resolved: 'pending' | 'guessed' | 'gaveUp'
   winnerTeamId?: string
   pointsAwarded?: number

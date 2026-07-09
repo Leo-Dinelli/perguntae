@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { ThemeId } from '../game/types'
+import { sfx } from '../sound'
 import { THEME_META } from '../theme'
 
 interface WheelProps {
@@ -27,6 +28,7 @@ export function Wheel({ themes, onResult }: WheelProps) {
     const currentMod = ((rotation % 360) + 360) % 360
     const delta = ((finalMod - currentMod + 360) % 360) + 5 * 360
     setSpinning(true)
+    sfx.spin(3200) // mesma duração da transição CSS .wheel-disc
     setRotation((r) => r + delta)
   }
 
