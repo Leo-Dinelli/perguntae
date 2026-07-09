@@ -8,6 +8,7 @@ import {
   giveUp,
   revealHint,
   scoreForGuess,
+  skipCard,
   winners,
 } from './engine'
 import type { AnswerCard, Difficulty, MatchConfig, ThemeId } from './types'
@@ -69,20 +70,95 @@ describe('scoreForGuess', () => {
 })
 
 describe('buildDeck', () => {
-  test('filtra por tema e dificuldade', () => {
+  test('filtra por tema', () => {
     const deck = buildDeck(POOL, 'esportes', 'facil', seededRng())
     expect(deck.map((c) => c.id).sort()).toEqual(['e1', 'e2'])
   })
 
-  test("'geral' inclui todos os temas da dificuldade escolhida", () => {
+  test("'geral' inclui todos os temas", () => {
     const deck = buildDeck(POOL, 'geral', 'facil', seededRng())
-    expect(deck.map((c) => c.id).sort()).toEqual(['c1', 'e1', 'e2', 'l1', 'p1'])
+    expect(deck.map((c) => c.id).sort()).toEqual([
+      'c1',
+      'e1',
+      'e2',
+      'l1',
+      'o1',
+      'p1',
+    ])
   })
 
   test('não muta o pool original', () => {
     const before = POOL.map((c) => c.id)
     buildDeck(POOL, 'geral', 'facil', seededRng())
     expect(POOL.map((c) => c.id)).toEqual(before)
+  })
+})
+
+describe('mix de dificuldade', () => {
+  const bigPool: AnswerCard[] = []
+  for (let i = 0; i < 60; i++) {
+    bigPool.push(card(`bf${i}`, 'esportes', 'facil'))
+    bigPool.push(card(`bm${i}`, 'esportes', 'medio'))
+    bigPool.push(card(`bd${i}`, 'esportes', 'dificil'))
+  }
+
+  test('modo fácil prioriza fáceis (~70%) mas mistura médias e difíceis', () => {
+    const deck = buildDeck(bigPool, 'esportes', 'facil', seededRng())
+    expect(deck).toHaveLength(180)
+    const first20 = deck.slice(0, 20)
+    const count = (d: Difficulty) =>
+      first20.filter((c) => c.difficulty === d).length
+    expect(count('facil')).toBeGreaterThanOrEqual(10)
+    expect(count('facil')).toBeLessThanOrEqual(18)
+    expect(count('medio') + count('dificil')).toBeGreaterThanOrEqual(2)
+  })
+
+  test('modo difícil é o espelho: maioria difícil, com respiros', () => {
+    const deck = buildDeck(bigPool, 'esportes', 'dificil', seededRng(7))
+    const first20 = deck.slice(0, 20)
+    const dificeis = first20.filter((c) => c.difficulty === 'dificil').length
+    expect(dificeis).toBeGreaterThanOrEqual(10)
+    expect(first20.some((c) => c.difficulty !== 'dificil')).toBe(true)
+  })
+
+  test('cai para o que existir quando falta alguma dificuldade no pool', () => {
+    const deck = buildDeck(POOL, 'esportes', 'medio', seededRng())
+    expect(deck.map((c) => c.id).sort()).toEqual(['e1', 'e2'])
+  })
+})
+
+describe('skipCard', () => {
+  test('descarta a carta sem pontuar e sem contar rodada', () => {
+    let state = drawCard(createMatch(['A', 'B'], POOL, CONFIG, seededRng()))
+    const burnedId = state.current!.card.id
+    const deckLen = state.deck.length
+    state = skipCard(state)
+    expect(state.current).toBeNull()
+    expect(state.roundsPlayed).toBe(0)
+    expect(state.teams.every((t) => t.score === 0)).toBe(true)
+    expect(state.deck).toHaveLength(deckLen)
+    expect(state.deck.find((c) => c.id === burnedId)).toBeUndefined()
+    expect(state.finished).toBe(false)
+  })
+
+  test('encerra a partida se o baralho acabar ao pular', () => {
+    let state = createMatch(
+      ['A', 'B'],
+      POOL,
+      { themeChoice: 'esportes', difficulty: 'facil', totalRounds: 10 },
+      seededRng(),
+    )
+    state = skipCard(drawCard(state))
+    expect(state.finished).toBe(false)
+    state = skipCard(drawCard(state))
+    expect(state.finished).toBe(true)
+  })
+
+  test('não faz nada se a rodada já foi resolvida', () => {
+    let state = drawCard(createMatch(['A', 'B'], POOL, CONFIG, seededRng()))
+    state = correctGuess(state, state.teams[0].id)
+    const after = skipCard(state)
+    expect(after).toBe(state)
   })
 })
 
@@ -208,6 +284,7 @@ describe('availableThemes', () => {
       'comida',
       'esportes',
       'lugares',
+      'objetos',
       'pessoas',
     ])
     state = giveUp(drawCard(state, 'comida'))

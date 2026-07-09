@@ -39,6 +39,36 @@ export const THEME_META: Record<ThemeId, ThemeMeta> = {
     color: 'var(--color-tema-pessoas)',
     direction: 'Sou uma pessoa famosa, real ou fictícia',
   },
+  filmes: {
+    label: 'Filmes & Séries',
+    emoji: '🎬',
+    color: 'var(--color-tema-filmes)',
+    direction: 'Sou um filme, série ou desenho famoso',
+  },
+  musica: {
+    label: 'Música',
+    emoji: '🎵',
+    color: 'var(--color-tema-musica)',
+    direction: 'Sou algo do mundo da música: artista, gênero, canção…',
+  },
+  animais: {
+    label: 'Animais',
+    emoji: '🐾',
+    color: 'var(--color-tema-animais)',
+    direction: 'Sou um animal (de verdade, prometo)',
+  },
+  marcas: {
+    label: 'Marcas',
+    emoji: '🏷️',
+    color: 'var(--color-tema-marcas)',
+    direction: 'Sou uma marca ou empresa famosa',
+  },
+  games: {
+    label: 'Games & Brincadeiras',
+    emoji: '🎮',
+    color: 'var(--color-tema-games)',
+    direction: 'Sou um jogo, videogame ou brincadeira',
+  },
 }
 
 export const GERAL_META: ThemeMeta = {
@@ -60,9 +90,9 @@ export function metaFor(choice: ThemeChoice): ThemeMeta {
 }
 
 export const DIFFICULTY_META: Record<Difficulty, { label: string; hint: string }> = {
-  facil: { label: 'Fácil', hint: 'respostas que todo mundo conhece' },
-  medio: { label: 'Médio', hint: 'exige um pouco mais de repertório' },
-  dificil: { label: 'Difícil', hint: 'para quem gosta de sofrer junto' },
+  facil: { label: 'Fácil', hint: '70% fáceis · 20% médias · 10% difíceis' },
+  medio: { label: 'Médio', hint: '60% médias · 20% fáceis · 20% difíceis' },
+  dificil: { label: 'Difícil', hint: '70% difíceis · 20% médias · 10% fáceis' },
 }
 
 export const DEPTH_META: Record<Depth, { label: string; emoji: string; hint: string }> = {

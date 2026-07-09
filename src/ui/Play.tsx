@@ -6,7 +6,9 @@ import {
   giveUp,
   revealHint,
   scoreForGuess,
+  skipCard,
 } from '../game/engine'
+import { Confetti } from './Confetti'
 import type { MatchState, ThemeId } from '../game/types'
 import { DIFFICULTY_META, THEME_META } from '../theme'
 import { ScoreBar } from './ScoreBar'
@@ -181,19 +183,32 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
                 ))}
               </div>
             </div>
-            <button
-              onClick={() => onChange(giveUp(match))}
-              className="btn border border-ink/15 bg-black/5 text-sm text-ink-soft"
-            >
-              🏳️ Ninguém acertou — revelar resposta
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setPeek(false)
+                  onChange(skipCard(match))
+                }}
+                className="btn flex-1 border border-ink/15 bg-black/5 text-sm text-ink-soft"
+                title="Descarta esta carta sem pontuar; ela não conta como rodada"
+              >
+                ⏭️ Pular carta
+              </button>
+              <button
+                onClick={() => onChange(giveUp(match))}
+                className="btn flex-1 border border-ink/15 bg-black/5 text-sm text-ink-soft"
+              >
+                🏳️ Ninguém acertou
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* ── resultado da rodada ── */}
       {showResult && round && (
-        <div className="playing-card animate-deal flex flex-col items-center gap-4 px-6 py-8 text-center">
+        <div className="playing-card animate-deal relative flex flex-col items-center gap-4 overflow-hidden px-6 py-8 text-center">
+          {round.resolved === 'guessed' && <Confetti count={18} />}
           {round.resolved === 'guessed' ? (
             <>
               <span className="animate-stamp text-5xl">🎉</span>

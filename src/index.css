@@ -25,6 +25,11 @@
   --color-tema-lugares: #2d8f8f;
   --color-tema-objetos: #d9a514;
   --color-tema-pessoas: #7b5cc4;
+  --color-tema-filmes: #4169c8;
+  --color-tema-musica: #ae3ec9;
+  --color-tema-animais: #5f9231;
+  --color-tema-marcas: #5c6b7a;
+  --color-tema-games: #00a5cf;
   --color-tema-geral: #3d7a5c;
   --color-tema-amor: #e0567f;
 }
@@ -73,11 +78,12 @@
 @keyframes deal-in {
   from {
     opacity: 0;
-    transform: translateY(28px) rotate(-2.5deg) scale(0.97);
+    transform: perspective(900px) translateY(34px) rotateX(26deg) rotate(-2deg)
+      scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateY(0) rotate(0) scale(1);
+    transform: perspective(900px) translateY(0) rotateX(0) rotate(0) scale(1);
   }
 }
 
@@ -123,10 +129,78 @@
   transition: transform 3.2s cubic-bezier(0.12, 0.8, 0.16, 1);
 }
 
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes title-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+@keyframes float-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(5deg);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-8vh) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(108vh) rotate(680deg);
+    opacity: 0.6;
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.5s ease-out both;
+}
+
+.animate-title-pop {
+  animation: title-pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+.animate-float {
+  animation: float-drift 6s ease-in-out infinite;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -16px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti-fall linear both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-deal,
   .animate-hint,
-  .animate-stamp {
+  .animate-stamp,
+  .animate-rise,
+  .animate-title-pop,
+  .animate-float,
+  .confetti-piece {
     animation: none;
   }
   .wheel-disc {

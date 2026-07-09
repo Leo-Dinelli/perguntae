@@ -4,6 +4,11 @@ export const THEMES = [
   'lugares',
   'objetos',
   'pessoas',
+  'filmes',
+  'musica',
+  'animais',
+  'marcas',
+  'games',
 ] as const
 
 export type ThemeId = (typeof THEMES)[number]
@@ -29,6 +34,8 @@ export interface RelationshipCard {
   id: string
   depth: Depth
   prompt: string
+  /** Exemplo bem-humorado opcional para destravar a resposta */
+  example?: string
 }
 
 export interface Team {

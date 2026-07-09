@@ -1,5 +1,6 @@
 import { winners } from '../game/engine'
 import type { MatchState } from '../game/types'
+import { Confetti } from './Confetti'
 
 interface EndProps {
   match: MatchState
@@ -14,8 +15,9 @@ export function End({ match, onRematch, onNewSetup, onHome }: EndProps) {
   const tie = champs.length > 1
 
   return (
-    <div className="flex flex-col items-center gap-8 pt-10 pb-16">
-      <header className="text-center">
+    <div className="relative flex flex-col items-center gap-8 pt-10 pb-16">
+      <Confetti count={36} />
+      <header className="animate-title-pop text-center">
         <span className="text-6xl">{tie ? '🤝' : '🏆'}</span>
         <h1 className="mt-3 font-display text-5xl text-amber-300">
           {tie ? 'Empate!' : `${champs[0].name} venceu!`}

@@ -4,12 +4,42 @@ import { THEMES } from '../game/types'
 interface HomeProps {
   onGroupMode: () => void
   onCoupleMode: () => void
+  onHistory: () => void
 }
 
-export function Home({ onGroupMode, onCoupleMode }: HomeProps) {
+/** Emojis flutuando ao fundo, como cartas espalhadas na mesa. */
+function FloatingBackground() {
+  const pieces = [
+    { emoji: '🏆', top: '6%', left: '8%', delay: '0s' },
+    { emoji: '🎬', top: '12%', left: '82%', delay: '1.2s' },
+    { emoji: '🍴', top: '38%', left: '4%', delay: '2.4s' },
+    { emoji: '🎵', top: '46%', left: '90%', delay: '0.8s' },
+    { emoji: '🐾', top: '68%', left: '10%', delay: '1.8s' },
+    { emoji: '🎮', top: '76%', left: '84%', delay: '3s' },
+    { emoji: '🧭', top: '90%', left: '20%', delay: '0.4s' },
+    { emoji: '💡', top: '88%', left: '70%', delay: '2s' },
+  ]
   return (
-    <div className="flex flex-col items-center gap-8 pt-10 pb-16">
-      <header className="text-center">
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {pieces.map((p) => (
+        <span
+          key={p.emoji}
+          className="animate-float absolute text-4xl opacity-15 select-none"
+          style={{ top: p.top, left: p.left, animationDelay: p.delay }}
+        >
+          {p.emoji}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function Home({ onGroupMode, onCoupleMode, onHistory }: HomeProps) {
+  return (
+    <div className="relative flex flex-col items-center gap-8 pt-10 pb-16">
+      <FloatingBackground />
+
+      <header className="animate-title-pop text-center">
         <p className="mb-2 text-sm font-bold uppercase tracking-[0.3em] text-amber-200/80">
           Uma resposta · vinte pistas
         </p>
@@ -25,24 +55,26 @@ export function Home({ onGroupMode, onCoupleMode }: HomeProps) {
       <div className="grid w-full max-w-lg gap-4 sm:grid-cols-2">
         <button
           onClick={onGroupMode}
-          className="playing-card group flex cursor-pointer flex-col items-start gap-3 p-6 text-left transition hover:-translate-y-1 hover:rotate-[-0.5deg] focus-visible:outline-4 focus-visible:outline-amber-300"
+          className="playing-card animate-rise group flex cursor-pointer flex-col items-start gap-3 p-6 text-left transition hover:-translate-y-1 hover:rotate-[-0.5deg] focus-visible:outline-4 focus-visible:outline-amber-300"
+          style={{ animationDelay: '150ms' }}
         >
           <span className="flex gap-1.5 text-2xl">
-            {THEMES.map((t) => (
+            {THEMES.slice(0, 5).map((t) => (
               <span key={t}>{THEME_META[t].emoji}</span>
             ))}
           </span>
           <span className="font-display text-3xl">Partida em grupo</span>
           <span className="text-sm text-ink-soft">
-            Times, placar, roleta de temas e cartas com 20 dicas. De
-            conhecimentos gerais a temas específicos.
+            Times, placar, roleta de temas e cartas com 20 dicas. Agora com 10
+            temas, de filmes a marcas.
           </span>
           <span className="btn-primary mt-2 w-full">Montar partida</span>
         </button>
 
         <button
           onClick={onCoupleMode}
-          className="playing-card group flex cursor-pointer flex-col items-start gap-3 p-6 text-left transition hover:-translate-y-1 hover:rotate-[0.5deg] focus-visible:outline-4 focus-visible:outline-amber-300"
+          className="playing-card animate-rise group flex cursor-pointer flex-col items-start gap-3 p-6 text-left transition hover:-translate-y-1 hover:rotate-[0.5deg] focus-visible:outline-4 focus-visible:outline-amber-300"
+          style={{ animationDelay: '250ms' }}
         >
           <span className="text-2xl">💞</span>
           <span className="font-display text-3xl">Modo casal</span>
@@ -59,7 +91,18 @@ export function Home({ onGroupMode, onCoupleMode }: HomeProps) {
         </button>
       </div>
 
-      <details className="w-full max-w-lg rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-sm text-card/85 open:pb-5">
+      <button
+        onClick={onHistory}
+        className="btn-ghost animate-rise w-full max-w-lg text-sm"
+        style={{ animationDelay: '350ms' }}
+      >
+        📜 Histórico de partidas
+      </button>
+
+      <details
+        className="animate-rise w-full max-w-lg rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-sm text-card/85 open:pb-5"
+        style={{ animationDelay: '420ms' }}
+      >
         <summary className="cursor-pointer font-bold text-amber-200">
           Como se joga?
         </summary>
@@ -75,6 +118,7 @@ export function Home({ onGroupMode, onCoupleMode }: HomeProps) {
             Acertou? O time leva os pontos da carta: começa valendo{' '}
             <strong>20</strong> e perde 1 ponto a cada dica revelada.
           </li>
+          <li>Carta muito difícil? Dá para pular sem perder a rodada.</li>
           <li>No fim das cartas, vence o time com mais pontos.</li>
         </ol>
         <p className="mt-3">

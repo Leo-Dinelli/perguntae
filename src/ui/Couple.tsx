@@ -112,9 +112,14 @@ export function Couple({ onExit }: CoupleProps) {
               </p>
               <p className="text-sm text-white/85">{AMOR_META.direction}</p>
             </div>
-            <p className="text-balance px-6 py-12 text-center text-2xl font-bold leading-snug">
-              {card.prompt}
-            </p>
+            <div className="px-6 py-10 text-center">
+              <p className="text-balance text-2xl font-bold leading-snug">
+                {card.prompt}
+              </p>
+              {card.example && (
+                <p className="mt-4 text-sm italic text-ink-soft">{card.example}</p>
+              )}
+            </div>
           </div>
           <button onClick={() => setIndex((i) => i + 1)} className="btn-primary text-lg">
             💌 Próxima pergunta

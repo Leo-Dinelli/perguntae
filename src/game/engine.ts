@@ -26,6 +26,23 @@ function shuffle<T>(items: T[], rng: Rng): T[] {
   return copy
 }
 
+/**
+ * Proporção de dificuldades no baralho para cada modo escolhido,
+ * para a partida não ficar 100% monótona nem impossível.
+ */
+export const DIFFICULTY_MIX: Record<Difficulty, Record<Difficulty, number>> = {
+  facil: { facil: 0.7, medio: 0.2, dificil: 0.1 },
+  medio: { facil: 0.2, medio: 0.6, dificil: 0.2 },
+  dificil: { facil: 0.1, medio: 0.2, dificil: 0.7 },
+}
+
+const DIFFICULTIES: Difficulty[] = ['facil', 'medio', 'dificil']
+
+/**
+ * Monta o baralho intercalando as dificuldades pelo peso do modo escolhido:
+ * o início do baralho (as cartas que serão jogadas) segue a proporção do mix
+ * e, se alguma dificuldade acabar, o restante preenche naturalmente.
+ */
 export function buildDeck(
   cards: AnswerCard[],
   themeChoice: ThemeChoice,
@@ -33,11 +50,35 @@ export function buildDeck(
   rng: Rng = Math.random,
 ): AnswerCard[] {
   const filtered = cards.filter(
-    (c) =>
-      c.difficulty === difficulty &&
-      (themeChoice === 'geral' || c.theme === themeChoice),
+    (c) => themeChoice === 'geral' || c.theme === themeChoice,
   )
-  return shuffle(filtered, rng)
+  const buckets = new Map<Difficulty, AnswerCard[]>(
+    DIFFICULTIES.map((d) => [
+      d,
+      shuffle(
+        filtered.filter((c) => c.difficulty === d),
+        rng,
+      ),
+    ]),
+  )
+  const weights = DIFFICULTY_MIX[difficulty]
+
+  const deck: AnswerCard[] = []
+  while (deck.length < filtered.length) {
+    const nonEmpty = DIFFICULTIES.filter((d) => buckets.get(d)!.length > 0)
+    const total = nonEmpty.reduce((sum, d) => sum + weights[d], 0)
+    let pick = rng() * total
+    let chosen = nonEmpty[nonEmpty.length - 1]
+    for (const d of nonEmpty) {
+      pick -= weights[d]
+      if (pick <= 0) {
+        chosen = d
+        break
+      }
+    }
+    deck.push(buckets.get(chosen)!.shift()!)
+  }
+  return deck
 }
 
 export function createMatch(
@@ -131,6 +172,17 @@ export function giveUp(state: MatchState): MatchState {
     ...state,
     current: { ...round, resolved: 'gaveUp' },
     ...finishRound(state),
+  }
+}
+
+/** Pula a carta atual: ela é descartada, sem pontos e sem contar rodada. */
+export function skipCard(state: MatchState): MatchState {
+  const round = state.current
+  if (!round || round.resolved !== 'pending') return state
+  return {
+    ...state,
+    current: null,
+    finished: state.deck.length === 0,
   }
 }
 
