@@ -45,7 +45,9 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
   const solo = match.teams.length === 1
   const round = match.current
   const roundActive = round?.resolved === 'pending'
-  const showResult = round != null && round.resolved !== 'pending' && !betweenRounds
+  // !dealing: ao sacar a próxima carta, a rodada anterior (já resolvida) não
+  // pode reaparecer durante a janela do embaralhar
+  const showResult = round != null && round.resolved !== 'pending' && !betweenRounds && !dealing
 
   useEffect(() => {
     hintsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
