@@ -3,7 +3,7 @@ import { ALL_CARDS } from './data/cards'
 import { createMatch, winners } from './game/engine'
 import type { MatchState } from './game/types'
 import { saveMatch } from './history'
-import { isMuted, sfx, toggleMuted } from './sound'
+import { isMuted, sfx, toggleMuted, unlockAudio } from './sound'
 import { Couple } from './ui/Couple'
 import { End } from './ui/End'
 import { History } from './ui/History'
@@ -30,13 +30,18 @@ export default function App() {
   const [muted, setMuted] = useState(isMuted)
   const matchIdRef = useRef('')
 
-  // blip discreto em todo botão; sons específicos são disparados por cima
+  // pop discreto em todo botão, no pointerdown (resposta imediata ao toque —
+  // o evento click só dispara ao soltar, ~100ms depois); sons específicos da
+  // ação continuam no onClick de cada botão. O primeiro gesto também destrava
+  // o AudioContext (política de autoplay do iOS/Android).
   useEffect(() => {
-    function onClick(event: MouseEvent) {
+    function onPointerDown(event: PointerEvent) {
+      if (event.button > 0) return
+      unlockAudio()
       if ((event.target as HTMLElement).closest('button')) sfx.click()
     }
-    document.addEventListener('click', onClick, true)
-    return () => document.removeEventListener('click', onClick, true)
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
   }, [])
 
   function startMatch(nextSetup: MatchSetup) {

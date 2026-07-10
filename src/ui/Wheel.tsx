@@ -27,8 +27,23 @@ export function Wheel({ themes, onResult }: WheelProps) {
     const finalMod = (360 - center) % 360
     const currentMod = ((rotation % 360) + 360) % 360
     const delta = ((finalMod - currentMod + 360) % 360) + 5 * 360
+
+    // som sincronizado com o giro: a transição CSS usa easeOutCubic
+    // (cubic-bezier(0.33, 1, 0.68, 1)); invertendo o easing, achamos o
+    // instante exato em que cada fronteira de segmento cruza o ponteiro
+    // e tocamos um "clack" ali — como uma roleta de verdade.
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const durationMs = reduced ? 300 : 3200 // igual ao CSS .wheel-disc
+    const ticks: number[] = []
+    for (let angle = Math.ceil(rotation / seg) * seg; angle <= rotation + delta; angle += seg) {
+      const progress = (angle - rotation) / delta
+      if (progress <= 0) continue
+      // inverso de easeOutCubic: t = 1 - (1 - p)^(1/3)
+      ticks.push(durationMs * (1 - Math.cbrt(1 - progress)))
+    }
+
     setSpinning(true)
-    sfx.spin(3200) // mesma duração da transição CSS .wheel-disc
+    sfx.spin(durationMs, ticks)
     setRotation((r) => r + delta)
   }
 
