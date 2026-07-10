@@ -178,6 +178,23 @@ export const sfx = {
     tone({ freq: 320, glideTo: 940, dur: 0.2, vol: 0.05, attack: 0.01 })
   },
 
+  /** embaralhando: duas riffladas de cartas + a carta deslizando pra fora */
+  shuffle() {
+    for (let riffle = 0; riffle < 2; riffle++) {
+      const base = riffle * 0.52
+      for (let i = 0; i < 7; i++) {
+        noise({
+          at: base + i * 0.045 + Math.random() * 0.012,
+          dur: 0.02,
+          vol: 0.06,
+          band: 2600 + Math.random() * 1400,
+          q: 2.5,
+        })
+      }
+    }
+    noise({ at: 1.0, dur: 0.13, vol: 0.07, band: 900, bandGlideTo: 2200, q: 1 })
+  },
+
   /** nova dica revelada: duas notas de marimba (G5 → C6) */
   reveal() {
     tone({ freq: 784, dur: 0.18, vol: 0.13 })
@@ -238,18 +255,23 @@ export const sfx = {
 
   /**
    * Roleta: um "clack" de madeira para cada fronteira de segmento cruzando o
-   * ponteiro (instantes calculados pelo Wheel com o MESMO easing do CSS),
-   * e um "ding" quando para.
+   * ponteiro (instantes calculados pelo Wheel com o MESMO easing do CSS).
+   * O som de parada é o spinResult(), disparado no transitionend real.
    */
-  spin(durationMs: number, tickTimesMs: number[]) {
+  spin(_durationMs: number, tickTimesMs: number[]) {
     for (const t of tickTimesMs) {
       const at = t / 1000
       // pitch levemente aleatório: clacks orgânicos, não metralhadora
       noise({ at, dur: 0.016, vol: 0.1, band: 1900 + Math.random() * 500, q: 6 })
       tone({ freq: 1150, at, dur: 0.012, vol: 0.02, type: 'square', lowpass: 3000 })
     }
-    const end = durationMs / 1000
-    tone({ freq: 1319, at: end, dur: 0.3, vol: 0.12 })
-    tone({ freq: 2637, at: end, dur: 0.18, vol: 0.04 })
+  },
+
+  /** roleta parou no tema: "ta-dá!" de sorteio (G5 → C6 com brilho) */
+  spinResult() {
+    tone({ freq: 784, dur: 0.12, vol: 0.12 })
+    tone({ freq: 1046, at: 0.1, dur: 0.38, vol: 0.14 })
+    tone({ freq: 1568, at: 0.1, dur: 0.24, vol: 0.05 })
+    noise({ at: 0.1, dur: 0.24, vol: 0.02, band: 7000, q: 0.7 })
   },
 }

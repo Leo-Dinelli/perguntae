@@ -34,11 +34,13 @@ const FEEDBACK: Record<Exclude<GuessLevel, 'acertou'>, string> = {
 
 export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps) {
   const [betweenRounds, setBetweenRounds] = useState(true)
+  const [dealing, setDealing] = useState(false)
   const [peek, setPeek] = useState(false)
   const [guess, setGuess] = useState('')
   const [feedback, setFeedback] = useState<Exclude<GuessLevel, 'acertou'> | null>(null)
   const [attempts, setAttempts] = useState(0)
   const hintsEndRef = useRef<HTMLLIElement>(null)
+  const dealTimer = useRef<number | null>(null)
 
   const solo = match.teams.length === 1
   const round = match.current
@@ -49,14 +51,37 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
     hintsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [round?.revealed])
 
+  useEffect(
+    () => () => {
+      if (dealTimer.current != null) window.clearTimeout(dealTimer.current)
+    },
+    [],
+  )
+
   function draw(theme?: ThemeId) {
+    if (dealing) return
     setPeek(false)
     setGuess('')
     setFeedback(null)
     setAttempts(0)
     setBetweenRounds(false)
-    sfx.draw()
-    onChange(drawCard(match, theme))
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    // roleta: o giro já criou o suspense — a carta sai direto
+    if (theme !== undefined || reduced) {
+      sfx.draw()
+      onChange(drawCard(match, theme))
+      return
+    }
+
+    // baralho: embaralha (1,15s, casado com a animação CSS), depois saca
+    setDealing(true)
+    sfx.shuffle()
+    dealTimer.current = window.setTimeout(() => {
+      setDealing(false)
+      sfx.draw()
+      onChange(drawCard(match))
+    }, 1150)
   }
 
   function submitGuess() {
@@ -108,6 +133,20 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
               </p>
               <Wheel themes={availableThemes(match)} onResult={(t) => draw(t)} />
             </>
+          ) : dealing ? (
+            <>
+              {/* baralho embaralhando: as cartas dançam e a de cima sobe */}
+              <div className="relative mt-4 h-48 w-72">
+                <div className="shuffle-a playing-card absolute left-0 top-3 h-44 w-72 opacity-70" />
+                <div className="shuffle-b playing-card absolute left-0 top-1.5 h-44 w-72 opacity-85" />
+                <div className="shuffle-c playing-card absolute left-0 top-0 flex h-44 w-72 items-center justify-center">
+                  <span className="font-display text-5xl text-card-edge">20</span>
+                </div>
+              </div>
+              <p className="animate-pulse font-display text-xl text-amber-200">
+                Embaralhando…
+              </p>
+            </>
           ) : (
             <>
               {/* verso do baralho */}
@@ -128,7 +167,7 @@ export function Play({ match, roulette, onChange, onFinish, onQuit }: PlayProps)
 
       {/* ── carta em jogo ── */}
       {roundActive && round && (
-        <div className="playing-card animate-deal overflow-hidden">
+        <div className="playing-card animate-draw-in overflow-hidden">
           <div
             className="flex items-center justify-between gap-3 px-5 py-4 text-white"
             style={{ background: THEME_META[round.card.theme].color }}

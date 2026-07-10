@@ -117,6 +117,84 @@
   animation: deal-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
 
+/* ── sequência de sacar carta: embaralhar → sacar → virar ── */
+
+@keyframes shuffle-left {
+  0%,
+  50%,
+  100% {
+    transform: translateX(0) rotate(-4deg);
+  }
+  25% {
+    transform: translateX(-52px) rotate(-9deg);
+  }
+  75% {
+    transform: translateX(-34px) rotate(-6deg);
+  }
+}
+
+@keyframes shuffle-right {
+  0%,
+  50%,
+  100% {
+    transform: translateX(0) rotate(3deg);
+  }
+  25% {
+    transform: translateX(52px) rotate(9deg);
+  }
+  75% {
+    transform: translateX(34px) rotate(6deg);
+  }
+}
+
+@keyframes shuffle-top {
+  0%,
+  55% {
+    transform: translateY(0) rotate(0);
+  }
+  70% {
+    transform: translateY(3px) rotate(1.5deg);
+  }
+  82% {
+    transform: translateY(0) rotate(0);
+  }
+  100% {
+    transform: translateY(-30px) rotate(-3deg);
+  }
+}
+
+.shuffle-a {
+  animation: shuffle-left 1.15s ease-in-out both;
+}
+
+.shuffle-b {
+  animation: shuffle-right 1.15s ease-in-out both;
+}
+
+.shuffle-c {
+  animation: shuffle-top 1.15s ease-in-out both;
+}
+
+/* carta sacada entra virando, como se saísse do baralho */
+@keyframes draw-in {
+  0% {
+    opacity: 0;
+    transform: perspective(1000px) translateY(48px) rotateY(-70deg) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(1000px) translateY(-6px) rotateY(8deg) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1000px) translateY(0) rotateY(0) scale(1);
+  }
+}
+
+.animate-draw-in {
+  animation: draw-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
 .animate-hint {
   animation: hint-in 0.3s ease-out both;
 }
@@ -202,6 +280,10 @@
   .animate-rise,
   .animate-title-pop,
   .animate-float,
+  .animate-draw-in,
+  .shuffle-a,
+  .shuffle-b,
+  .shuffle-c,
   .confetti-piece {
     animation: none;
   }

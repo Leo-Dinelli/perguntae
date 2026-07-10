@@ -50,12 +50,13 @@ export function Wheel({ themes, onResult }: WheelProps) {
   function handleEnd() {
     if (!spinning || !target.current) return
     setSpinning(false)
+    sfx.spinResult() // "ta-dá" no instante visual exato da parada
     onResult(target.current)
   }
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className="relative h-72 w-72">
+      <div className="relative h-80 w-80">
         {/* ponteiro */}
         <div
           aria-hidden
@@ -74,7 +75,7 @@ export function Wheel({ themes, onResult }: WheelProps) {
                 aria-hidden
                 className="absolute left-1/2 top-1/2 text-3xl"
                 style={{
-                  transform: `translate(-50%, -50%) rotate(${center}deg) translateY(-96px) rotate(${-center}deg)`,
+                  transform: `translate(-50%, -50%) rotate(${center}deg) translateY(-108px) rotate(${-center}deg)`,
                 }}
               >
                 {THEME_META[t].emoji}
