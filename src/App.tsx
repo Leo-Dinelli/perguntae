@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { track } from './analytics'
 import { ALL_CARDS } from './data/cards'
 import { createMatch, winners } from './game/engine'
 import type { MatchState } from './game/types'
 import { saveMatch } from './history'
 import { isMuted, sfx, toggleMuted, unlockAudio } from './sound'
+import { ConsentBanner } from './ui/ConsentBanner'
 import { Couple } from './ui/Couple'
 import { End } from './ui/End'
 import { History } from './ui/History'
@@ -52,6 +54,13 @@ export default function App() {
     setSetup(nextSetup)
     setMatch(createMatch(nextSetup.teamNames, ALL_CARDS, nextSetup.config))
     setScreen('play')
+    track('match_start', {
+      mode: setupMode,
+      theme: nextSetup.config.themeChoice,
+      difficulty: nextSetup.config.difficulty,
+      total_rounds: nextSetup.config.totalRounds,
+      roulette: nextSetup.roulette,
+    })
   }
 
   // salva assim que a partida termina (última rodada resolvida), sem depender
@@ -69,6 +78,11 @@ export default function App() {
       teams: match.teams.map((t) => ({ name: t.name, score: t.score })),
       winners: winners(match).map((t) => t.name),
     })
+    track('match_finish', {
+      theme: setup.config.themeChoice,
+      difficulty: setup.config.difficulty,
+      total_rounds: setup.config.totalRounds,
+    })
   }, [match, setup])
 
   return (
@@ -85,7 +99,10 @@ export default function App() {
         <Home
           onGroupMode={() => setRulesFor('grupo')}
           onSoloMode={() => setRulesFor('solo')}
-          onCoupleMode={() => setScreen('couple')}
+          onCoupleMode={() => {
+            track('couple_open')
+            setScreen('couple')
+          }}
           onHistory={() => setScreen('history')}
         />
       )}
@@ -132,6 +149,8 @@ export default function App() {
       {screen === 'couple' && <Couple onExit={() => setScreen('home')} />}
 
       {screen === 'history' && <History onBack={() => setScreen('home')} />}
+
+      <ConsentBanner />
     </main>
   )
 }
