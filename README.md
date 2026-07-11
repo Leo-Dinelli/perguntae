@@ -21,12 +21,15 @@ sem servidor e sem cadastro.
   leve (🍿), média (💛) e profunda (🌊). Sem placar e **sem histórico**: nada
   do modo casal é gravado.
 
-## Privacidade do histórico
+## Privacidade
 
-O histórico de partidas (grupo/solo) fica **apenas no localStorage do
-dispositivo/navegador** — nada é enviado a nenhum servidor, então cada pessoa
-vê somente as próprias partidas, mesmo com o jogo rodando em vários aparelhos
-ao mesmo tempo.
+- **Histórico de partidas** (grupo/solo): fica **apenas no localStorage do
+  dispositivo/navegador** — cada pessoa vê somente as próprias partidas, mesmo
+  com o jogo rodando em vários aparelhos ao mesmo tempo.
+- **Métricas de uso**: o site usa Google Analytics 4 para medir visitas e
+  partidas (eventos anônimos: tema, dificuldade, rodadas). O script **só
+  carrega após o visitante aceitar** o banner de cookies (LGPD) — recusando,
+  nenhum dado sai do navegador. Implementação em `src/analytics.ts`.
 
 ## Rodando localmente
 
