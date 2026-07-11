@@ -9,6 +9,7 @@ import { End } from './ui/End'
 import { History } from './ui/History'
 import { Home } from './ui/Home'
 import { Play } from './ui/Play'
+import { RulesModal } from './ui/RulesModal'
 import type { MatchSetup } from './ui/SetupMatch'
 import { SetupMatch } from './ui/SetupMatch'
 
@@ -25,6 +26,8 @@ function newMatchId(): string {
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [setupMode, setSetupMode] = useState<'grupo' | 'solo'>('grupo')
+  // modo aguardando confirmação no pop-up de regras (null = fechado)
+  const [rulesFor, setRulesFor] = useState<'grupo' | 'solo' | null>(null)
   const [match, setMatch] = useState<MatchState | null>(null)
   const [setup, setSetup] = useState<MatchSetup | null>(null)
   const [muted, setMuted] = useState(isMuted)
@@ -51,8 +54,11 @@ export default function App() {
     setScreen('play')
   }
 
+  // salva assim que a partida termina (última rodada resolvida), sem depender
+  // da tela de fim — sair pelo "← Sair" depois da última carta também conta.
+  // O saveMatch já deduplica pelo id, então re-renderizações não duplicam.
   useEffect(() => {
-    if (screen !== 'end' || !match || !setup) return
+    if (!match?.finished || !setup) return
     saveMatch({
       id: matchIdRef.current,
       endedAt: new Date().toISOString(),
@@ -63,7 +69,7 @@ export default function App() {
       teams: match.teams.map((t) => ({ name: t.name, score: t.score })),
       winners: winners(match).map((t) => t.name),
     })
-  }, [screen, match, setup])
+  }, [match, setup])
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 pt-6">
@@ -77,16 +83,22 @@ export default function App() {
       </button>
       {screen === 'home' && (
         <Home
-          onGroupMode={() => {
-            setSetupMode('grupo')
-            setScreen('setup')
-          }}
-          onSoloMode={() => {
-            setSetupMode('solo')
-            setScreen('setup')
-          }}
+          onGroupMode={() => setRulesFor('grupo')}
+          onSoloMode={() => setRulesFor('solo')}
           onCoupleMode={() => setScreen('couple')}
           onHistory={() => setScreen('history')}
+        />
+      )}
+
+      {rulesFor && (
+        <RulesModal
+          mode={rulesFor}
+          onPlay={() => {
+            setSetupMode(rulesFor)
+            setRulesFor(null)
+            setScreen('setup')
+          }}
+          onClose={() => setRulesFor(null)}
         />
       )}
 
